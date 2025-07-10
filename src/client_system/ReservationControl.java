@@ -5,11 +5,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.text.DateFormat;											// @2
-import java.text.ParseException;										// @2
-import java.text.SimpleDateFormat;										// @2
-import	java.util.ArrayList;											// @1
-import java.util.Calendar;												// @2
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import	java.util.ArrayList;
+import java.util.Calendar;
 
 public class ReservationControl {
 	// MySQLに接続するためのデータ
@@ -314,5 +314,60 @@ public class ReservationControl {
 			e.printStackTrace();													// @2 StackTraceをコンソールに表示
 		}																			// @2
 		return	abailableTime;														// @2 open_time,close_timeの「時」を返す（エラーなら{0,0}が返る
+	}
+
+	//// @3 教室予約状況確認ボタン押下時の処理を行うメソッド
+	public String getReservationStatus(MainFrame frame) {
+	    StringBuilder res = new StringBuilder();
+	    connectDB();
+	    try {
+	        String facilityId = frame.choiceFacility.getSelectedItem();
+
+	        // 現在時刻から直近の土曜日の期間を計算
+	        Calendar now = Calendar.getInstance();
+	        Calendar saturday = (Calendar) now.clone();
+	        while (saturday.get(Calendar.DAY_OF_WEEK) != Calendar.SATURDAY) {
+	            saturday.add(Calendar.DATE, 1);
+	        }
+
+	        // SimpleDateFormatはメソッド内で必要な箇所のみ定義
+	        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+	        String startDate = dateFormat.format(now.getTime());
+	        String endDate = dateFormat.format(saturday.getTime());
+
+	        String sql = "SELECT r.user_id, u.user_name, r.day, r.start_time, r.end_time " +
+	                     "FROM db_reservation.reservation r JOIN db_reservation.user u ON r.user_id = u.user_id " +
+	                     "WHERE r.facility_id = '" + facilityId + "' AND r.day BETWEEN '" + startDate + "' AND '" + endDate + "' " +
+	                     "ORDER BY r.day, r.start_time;";
+
+	        System.out.println(sql); // @@@@ デバッグ用SQLをコンソールに表示
+	        ResultSet rs = sqlStmt.executeQuery(sql);
+
+	        boolean hasReservations = false;
+	        while (rs.next()) {
+	            hasReservations = true;
+	            String userId = rs.getString("user_id");
+	            String userName = rs.getString("user_name");
+	            String day = rs.getString("day");
+	            String startTime = rs.getString("start_time");
+	            String endTime = rs.getString("end_time");
+
+	            res.append(userId).append(" ").append(userName).append(" ")
+	               .append(day).append(" ").append(startTime.substring(0, 5)).append("～").append(endTime.substring(0, 5)).append("\n");
+	        }
+
+	        if (!hasReservations) {
+	            res.append("予約情報が見つかりません\n");
+	        }
+	        rs.close(); // クローズ
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        res.append("予約状況の取得中にエラーが発生しました。\n");
+	    } finally {
+	        closeDB();
+	    }
+	    return res.toString();
 	}
 }
