@@ -386,8 +386,9 @@ public class ReservationControl {
         ArrayList<String[]> list = new ArrayList<>();
         connectDB();
         try {
-            String sql = "SELECT day, facility_id, start_time, end_time FROM db_reservation.reservation " +
-                         "WHERE user_id = '" + userId + "' ORDER BY day, start_time";
+        	String sql = "SELECT day, facility_id, start_time, end_time FROM db_reservation.reservation " +
+                    "WHERE user_id = '" + userId + "' AND day >= CURDATE() ORDER BY day, start_time";
+
             ResultSet rs = sqlStmt.executeQuery(sql);
             while (rs.next()) {
                 String[] data = new String[4];
@@ -411,8 +412,10 @@ public class ReservationControl {
         ArrayList<String> resultList = new ArrayList<>();
         connectDB();
         try {
-            StringBuilder sql = new StringBuilder("SELECT facility_id, day, start_time, end_time " +
-                                                  "FROM db_reservation.reservation WHERE user_id = '" + userId + "'");
+        	StringBuilder sql = new StringBuilder("SELECT facility_id, day, start_time, end_time " +
+                    "FROM db_reservation.reservation WHERE user_id = '" + userId + "' " +
+                    "AND day >= CURDATE()");
+
             if (facility != null && !facility.isEmpty()) {
                 sql.append(" AND facility_id = '").append(facility).append("'");
             }
