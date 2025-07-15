@@ -27,6 +27,7 @@ public class MainFrame extends Frame implements ActionListener, WindowListener{
 	Button	buttonExplanation;									// @1 教室概要ボタン
 	Button	buttonReservation;									// @2 新規予約ボタン
 	Button  buttonCheckReservationStatus;                       // @3 教室予約状況確認ボタン
+	Button  buttonSelfReservation;                              // @4 自己予約確認ボタン（追加）
 	// @1 コンボボックスのインスタンス生成
 	ChoiceFacility	choiceFacility;								// @1 教室選択用コンボボックス
 	// テキストフィールドのインスタンス生成
@@ -41,9 +42,10 @@ public class MainFrame extends Frame implements ActionListener, WindowListener{
 
 		// ボタンの生成
 		buttonLog = new Button( " ログイン ");					// ログインボタン
-		buttonExplanation = new Button( "教室概要");			// @1 教室選択ボタン
-		buttonReservation = new Button( "新規予約");			// @2 新規予約ボタン
+		buttonExplanation = new Button( "教室概要");		// @1 教室選択ボタン
+		buttonReservation = new Button( "新規予約");		// @2 新規予約ボタン
 		buttonCheckReservationStatus = new Button("予約状況");  // @3 予約状況確認ボタン
+		buttonSelfReservation = new Button("自己予約確認");      // @4 自己予約確認ボタン（追加）
 
 		// @1 教室選択用コンボボックスの生成
 		List<String> facilityId = new ArrayList<String>();		// @1 全てのfacilityIDを入れるリスト
@@ -58,25 +60,26 @@ public class MainFrame extends Frame implements ActionListener, WindowListener{
 		setLayout( new BorderLayout());
 		
 		// @1 上部パネルの上パネルに「教室予約システム」というラベルと【ログイン】ボタン等を追加
-		panelNorthSub1 = new Panel();							// @1 NorthSub1のパネルインスタンスを生成
+		panelNorthSub1 = new Panel();								// @1 NorthSub1のパネルインスタンスを生成
 		panelNorthSub1.add( new Label( "教室予約システム　"));	// @1 タイトルラベルを付加
 		panelNorthSub1.add( buttonLog);							// @1 ログインボタンを付加
 		panelNorthSub1.add( new Label( "　　　　　　ログインID："));	// @1 ログインIDタイトルラベルを付加
 		panelNorthSub1.add( tfLoginID);							// @1 ログインID表示用テキストフィールドを付加
-																// @1
+																			// @1
 		// @1 上部パネルの下パネルに教室選択及び教室概要ボタンを追加
 		panelNorthSub2 = new Panel();							// @1 NorthSub2のパネルインスタンスを生成
 		panelNorthSub2.add( new Label( "教室"));				// @1 教室選択コンボボックスのラベルを付加
-		panelNorthSub2.add( choiceFacility);					// @1 教室選択コンボボックスを付加
+		panelNorthSub2.add( choiceFacility);				// @1 教室選択コンボボックスを付加
 		panelNorthSub2.add( new Label( "　"));					// @1 コンボボックスとボタンの隙間をラベルで付加
-		panelNorthSub2.add( buttonExplanation);					// @1 教室概要表示ボタンを付加
+		panelNorthSub2.add( buttonExplanation);				// @1 教室概要表示ボタンを付加
 		panelNorthSub2.add( buttonCheckReservationStatus);      // @3 教室予約状況確認ボタンを付加
+		panelNorthSub2.add( buttonSelfReservation);             // @4 自己予約確認ボタンを付加
 
 		// @1 上部パネルに上下2つのパネルを追加
 		panelNorth = new Panel( new BorderLayout());			// @1 panelNorthをBorderLayoutのパネルで生成
 		panelNorth.add( panelNorthSub1, BorderLayout.NORTH);	// @1 panelNorthSub1を上部に付加
 		panelNorth.add( panelNorthSub2, BorderLayout.CENTER);	// @1 panelNorthSub2を下部に付加
-																// @1
+																		// @1
 		add( panelNorth, BorderLayout.NORTH);
 
 		// 中央パネルにテキストメッセージ欄と予約表示用テキストエリアを設定
@@ -103,7 +106,8 @@ public class MainFrame extends Frame implements ActionListener, WindowListener{
 		buttonExplanation.addActionListener( this);				// @1 ActionListenerに教室概要ボタンを追加
 		buttonReservation.addActionListener( this);				// @2 ActionListenerに新規予約ボタンを追加
 		buttonCheckReservationStatus.addActionListener(this);   // @3 ActionListenerに教室予約状況確認ボタンを追加
-		addWindowListener( this);								// WindowListenerを追加
+		buttonSelfReservation.addActionListener(this);          // @4 ActionListenerに自己予約確認ボタンを追加
+		addWindowListener( this);											// WindowListenerを追加
 	}
 
 	@Override
@@ -171,6 +175,14 @@ public class MainFrame extends Frame implements ActionListener, WindowListener{
 		    String reservationStatus = reservationControl.getReservationStatus(this); // 予約状況を取得
 		    ReservationStatusText.setText(reservationStatus); // 予約状況をReservationStatusTextに表示
             textMessage.setText(""); // 予約状況表示時はメッセージエリアをクリア
+        // @4 押下ボタンが自己予約確認ボタンの時，SelfReservationDialogを表示
+		} else if (e.getSource() == buttonSelfReservation) {
+		    if (!reservationControl.isLogin()) {
+		        textMessage.setText("ログインして下さい。");
+		        ReservationStatusText.setText("");
+		    } else {
+		        new SelfReservationDialog(this, reservationControl).setVisible(true);
+		    }
 		}
 	}
 }

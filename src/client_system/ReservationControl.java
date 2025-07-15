@@ -370,4 +370,79 @@ public class ReservationControl {
 	    }
 	    return res.toString();
 	}
+	
+	//ログイン中のユーザのユーザIDを取得するメソッド
+	public String getLoginUserId() {
+	    return reservationUserID;
+	}
+	
+	//ログイン状態を取得するメソッド
+	public boolean isLogin() {
+	    return flagLogin;
+	}
+	
+    // --- 自己予約取得（SelfReservationDialog 用） ---
+    public ArrayList<String[]> getSelfReservations(String userId) {
+        ArrayList<String[]> list = new ArrayList<>();
+        connectDB();
+        try {
+            String sql = "SELECT day, facility_id, start_time, end_time FROM db_reservation.reservation " +
+                         "WHERE user_id = '" + userId + "' ORDER BY day, start_time";
+            ResultSet rs = sqlStmt.executeQuery(sql);
+            while (rs.next()) {
+                String[] data = new String[4];
+                data[0] = rs.getString("day");          // yyyy-mm-dd
+                data[1] = rs.getString("facility_id");  // 教室ID
+                data[2] = rs.getString("start_time");   // hh:mm:ss
+                data[3] = rs.getString("end_time");     // hh:mm:ss
+                list.add(data);
+            }
+            rs.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            closeDB();
+        }
+        return list;
+    }
+
+    // --- 自己予約検索（フィルター） ---
+    public ArrayList<String> searchSelfReservations(String userId, String facility, String date, String start, String end) {
+        ArrayList<String> resultList = new ArrayList<>();
+        connectDB();
+        try {
+            StringBuilder sql = new StringBuilder("SELECT facility_id, day, start_time, end_time " +
+                                                  "FROM db_reservation.reservation WHERE user_id = '" + userId + "'");
+            if (facility != null && !facility.isEmpty()) {
+                sql.append(" AND facility_id = '").append(facility).append("'");
+            }
+            if (date != null && !date.isEmpty()) {
+                sql.append(" AND day = '").append(date).append("'");
+            }
+            if (start != null && !start.isEmpty()) {
+                sql.append(" AND start_time = '").append(start).append("'");
+            }
+            if (end != null && !end.isEmpty()) {
+                sql.append(" AND end_time = '").append(end).append("'");
+            }
+            sql.append(" ORDER BY day, start_time");
+
+            ResultSet rs = sqlStmt.executeQuery(sql.toString());
+            while (rs.next()) {
+                String row = String.format("教室%s 日付 %s 利用時間 %s～%s",
+                        rs.getString("facility_id"),
+                        rs.getString("day"),
+                        rs.getString("start_time").substring(0, 5),
+                        rs.getString("end_time").substring(0, 5));
+                resultList.add(row);
+            }
+            rs.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            closeDB();
+        }
+        return resultList;
+    }
+
 }
